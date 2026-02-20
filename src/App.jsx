@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const partnerNames = [
   "Cambridge Extension",
@@ -163,13 +163,17 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const rootElement = document.documentElement;
+    const motionQuery =
+      typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
     const revealItems = [...document.querySelectorAll("[data-reveal]")];
 
-    if (motionQuery.matches) {
+    if ((motionQuery && motionQuery.matches) || typeof window.IntersectionObserver !== "function") {
       revealItems.forEach((item) => item.classList.add("is-visible"));
       return undefined;
     }
+
+    rootElement.classList.add("reveal-ready");
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -192,7 +196,10 @@ function App() {
       observer.observe(item);
     });
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      rootElement.classList.remove("reveal-ready");
+    };
   }, []);
 
   const closeMenu = () => setMenuOpen(false);
